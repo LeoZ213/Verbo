@@ -1,8 +1,11 @@
 import flet as ft
+import tempfile
+import io
 from flet.core.file_picker import FilePickerFile
 from flet.core.grid_view import GridView
 from pdf2image import convert_from_path
-import tempfile
+from ebooklib import epub
+from PIL import Image
 
 
 # Event Handlers
@@ -10,6 +13,12 @@ def handle_change(e: ft.ControlEvent):
     """Triggered when expansion panel changes"""
     print(f"Change on panel with index {e.data}")
 
+def get_epub_cover_with_lib(file_path):
+    book = epub.read_epub(file_path)
+    cover_image = book.get_item_with_id('cover-image')  # or search for cover
+    if cover_image:
+        return Image.open(io.BytesIO(cover_image.get_content()))
+    return None # Return none if no cover were found
 
 def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     """Add selected file to the Library list"""
@@ -27,19 +36,35 @@ def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     library_list.update()
 
 def add_to_grid(file: FilePickerFile, book_grid: GridView):
-    print(file.path)
 
-    # Convert the first page of the PDF to an image
-    book_cover = convert_from_path(file.path, first_page=1, last_page=1)
+    # Get file extension
+    file_ext = file.name.rsplit(".", 1)[-1]
+    print(file_ext)
 
-    # Save as temporary png
-    tmp = tempfile.NamedTemporaryFile(suffix = ".png", delete=False)
-    book_cover[0].save(tmp.name, format="PNG")
+    if file_ext == "pdf":
+        # Convert the first page of the PDF to an image
+        book_cover = convert_from_path(file.path, first_page=1, last_page=1)
+        # Save as temporary png
+        tmp = tempfile.NamedTemporaryFile(suffix = ".png", delete=False)
+        book_cover[0].save(tmp.name, format="PNG")
+        # Add to Grid
+        book_grid.controls.append(ft.Image(src=tmp.name, width=150, height=200))
+    elif file_ext == "epub":
+        epub_cover = get_epub_cover_with_lib(file.path)
+        if epub_cover:
+            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            epub_cover.save(tmp.name, format="PNG")
+            book_grid.controls.append(ft.Image(src=tmp.name, width=150, height=200))
+        else:
+            # Fallback to icon or placeholder
+            book_grid.controls.append(ft.Icon(ft.Icons.BOOK, size=150))
+    elif file_ext == "txt":
+        # Generic Icon for txt placeholder
+        book_grid.controls.append(ft.Icon(ft.Icons.DESCRIPTION, size=150))
+    else:
+        print("Unsupported file type")
 
-    # Add to Grid
-    book_grid.controls.append(ft.Image(src=tmp.name, width=150, height=200))
     book_grid.update()
-
 
 def on_dialogue_result(e: ft.FilePickerResultEvent, library_list: ft.ListView, book_grid: GridView):
     """Handle file picker result event"""
