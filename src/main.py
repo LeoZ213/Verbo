@@ -1,8 +1,12 @@
 import flet as ft
+import tempfile
+import io
+
 from flet.core.file_picker import FilePickerFile
 from flet.core.grid_view import GridView
 from pdf2image import convert_from_path
-import tempfile
+from ebooklib import epub
+from PIL import Image
 
 
 # Event Handlers
@@ -10,6 +14,12 @@ def handle_change(e: ft.ControlEvent):
     """Triggered when expansion panel changes"""
     print(f"Change on panel with index {e.data}")
 
+def get_epub_cover_with_lib(file_path):
+    book = epub.read_epub(file_path)
+    cover_image = book.get_item_with_id('cover-image')  # or search for cover
+    if cover_image:
+        return Image.open(io.BytesIO(cover_image.get_content()))
+    return None # Return none if no cover were found
 
 def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     """Add selected file to the Library list"""
@@ -27,19 +37,67 @@ def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     library_list.update()
 
 def add_to_grid(file: FilePickerFile, book_grid: GridView):
-    print(file.path)
 
-    # Convert the first page of the PDF to an image
-    book_cover = convert_from_path(file.path, first_page=1, last_page=1)
+    # Get file extension
+    file_ext = file.name.rsplit(".", 1)[-1]
+    file_name = file.name.rsplit(".", 1)[0] # Get file name without the extension
+    print(file_ext)
 
-    # Save as temporary png
-    tmp = tempfile.NamedTemporaryFile(suffix = ".png", delete=False)
-    book_cover[0].save(tmp.name, format="PNG")
+    book_cover = None
 
-    # Add to Grid
-    book_grid.controls.append(ft.Image(src=tmp.name, width=150, height=200))
+    if file_ext == "pdf":
+        # Convert the first page of the PDF to an image
+        pdf_pages = convert_from_path(file.path, first_page=1, last_page=1)
+        # Save as temporary png
+        tmp = tempfile.NamedTemporaryFile(suffix = ".png", delete=False)
+        pdf_pages[0].save(tmp.name, format="PNG")
+
+        book_cover = ft.Image(src=tmp.name, width=150, height=200, fit=ft.ImageFit.CONTAIN)
+    elif file_ext == "epub":
+        epub_cover = get_epub_cover_with_lib(file.path)
+        print(epub_cover)
+        if epub_cover:
+            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            epub_cover.save(tmp.name, format="PNG")
+            book_cover = ft.Image(src=tmp.name, width=150, height=200, fit=ft.ImageFit.CONTAIN)
+        else:
+            # Fallback to icon or placeholder
+            book_cover = ft.Icon(ft.Icons.BOOK, size=150)
+    elif file_ext == "txt":
+        # Generic Icon for txt placeholder
+        book_cover = ft.Icon(ft.Icons.DESCRIPTION, size=150)
+    else:
+        print("Unsupported file type")
+        return
+
+    # Makes sure the icons are in the same size
+    book_cover_container = ft.Container(
+        content=book_cover,
+        width=150,
+        height=200,
+        alignment=ft.alignment.center
+    )
+
+    book_item = ft.Column(
+        controls=[
+            book_cover_container,
+            ft.Text(
+                file_name,
+                size = 12,
+                weight=ft.FontWeight.NORMAL,
+                text_align=ft.TextAlign.CENTER,
+                max_lines=2,
+                overflow=ft.TextOverflow.ELLIPSIS,
+                width=150,
+                color=ft.Colors.BLACK
+            )
+        ],
+        #horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        #alignment=ft.MainAxisAlignment.CENTER
+    )
+    book_grid.controls.append(book_item)
+
     book_grid.update()
-
 
 def on_dialogue_result(e: ft.FilePickerResultEvent, library_list: ft.ListView, book_grid: GridView):
     """Handle file picker result event"""
@@ -88,8 +146,10 @@ def build_book_grid():
         expand=1,
         runs_count=5,
         max_extent=150,
-        child_aspect_ratio=1.0,
-        spacing=5,
+        child_aspect_ratio=0.65,
+        # Change this to increase/decrease vertical space between rows
+        spacing=30,
+        # Change this to increase/decrease horizontal spacing between child
         run_spacing=5,
     )
 
