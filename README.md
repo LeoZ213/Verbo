@@ -1,4 +1,4 @@
-# Verboproject app
+# Verbo
 
 ## Run the app
 
