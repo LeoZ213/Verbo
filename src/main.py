@@ -153,6 +153,28 @@ def build_book_grid():
         run_spacing=5,
     )
 
+
+def search_books(e: ft.ControlEvent, book_grid: GridView):
+    """Filter books based on search query"""
+    query = e.control.value.lower().strip()
+
+    # If search is empty, show all books
+    if not query:
+        for book_item in book_grid.controls:
+            book_item.visible = True
+    else:
+        # Hide books that don't match the search
+        for book_item in book_grid.controls:
+            # Get the book name from the Text widget (second control in Column)
+            book_name = book_item.controls[1].value.lower()
+
+            if query in book_name:
+                book_item.visible = True
+            else:
+                book_item.visible = False
+
+    book_grid.update()
+
 # Main App
 def main(page: ft.Page):
     # Page setup
@@ -178,6 +200,7 @@ def main(page: ft.Page):
         view_elevation=4,
         divider_color=ft.Colors.AMBER,
         bar_hint_text="Search for books...",
+        on_change=lambda e: search_books(e, book_grid)
     )
 
     page.overlay.append(file_picker)
