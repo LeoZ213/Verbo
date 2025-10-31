@@ -4,9 +4,9 @@ import flet as ft
 from flet.core.file_picker import FilePickerFile
 from flet.core.grid_view import GridView
 
-from utils.cover_extractor import get_pdf_cover, get_epub_cover
-from ui.components import create_book_cover_widget, create_book_item
-from handlers.book_handler import book_item_double_tap
+from src.utils.cover_extractor import get_pdf_cover, get_epub_cover
+from src.ui.components import create_book_cover_widget, create_book_item
+from src.handlers.book_handler import book_item_double_tap
 
 
 def add_to_library(file: FilePickerFile, library_list: ft.ListView):
