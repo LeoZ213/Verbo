@@ -23,7 +23,7 @@ def get_epub_cover_with_lib(file_path):
 
 def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     """Add selected file to the Library list"""
-    file_name = file.name.rsplit(".", 1)[0]  # remove extension
+    file_name = file.name
     library_list.controls.append(
         ft.TextButton(
             content=ft.Text(file_name, max_lines=1),
@@ -36,7 +36,26 @@ def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     )
     library_list.update()
 
-def add_to_grid(file: FilePickerFile, book_grid: GridView):
+def create_book_tab(e: ft.ControlEvent) -> ft.Tab:
+    book_data = e.control.data
+    book_tab = ft.Tab(
+        #TODO wrap the text or have a hard border
+        text=book_data['name'][0:5]
+        #TODO Have a reader view where users can actually read the contents
+        #content=
+    )
+
+    return book_tab
+
+def book_item_double_tap(e: ft.ControlEvent, tabs_list: ft.Tabs):
+    book_data = e.control.data
+    print(f"Opening: {book_data['name']}")
+    print(f"Path: {book_data['path']}")
+    tabs_list.tabs.append(create_book_tab(e))
+    tabs_list.selected_index = len(tabs_list.tabs) - 1
+    tabs_list.update()
+
+def add_to_grid(file: FilePickerFile, book_grid: GridView, tabs_list: ft.Tabs):
 
     # Get file extension
     file_ext = file.name.rsplit(".", 1)[-1]
@@ -73,39 +92,42 @@ def add_to_grid(file: FilePickerFile, book_grid: GridView):
     # Makes sure the icons are in the same size
     book_cover_container = ft.Container(
         content=book_cover,
+        data={'path': file.path, 'name': file.name, 'ext': file_ext},
         width=150,
         height=200,
-        alignment=ft.alignment.center
+        alignment=ft.alignment.center,
     )
 
-    book_item = ft.Column(
-        controls=[
-            book_cover_container,
-            ft.Text(
-                file_name,
-                size = 12,
-                weight=ft.FontWeight.NORMAL,
-                text_align=ft.TextAlign.CENTER,
-                max_lines=2,
-                overflow=ft.TextOverflow.ELLIPSIS,
-                width=150,
-                color=ft.Colors.BLACK
-            )
-        ],
-        #horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        #alignment=ft.MainAxisAlignment.CENTER
+    book_item = ft.GestureDetector(
+        content=ft.Column(
+            controls=[
+                book_cover_container,
+                ft.Text(
+                    file_name,
+                    size = 12,
+                    weight=ft.FontWeight.NORMAL,
+                    text_align=ft.TextAlign.CENTER,
+                    max_lines=2,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    width=150,
+                    color=ft.Colors.BLACK
+                )
+            ],
+        ),
+        on_double_tap=lambda e: book_item_double_tap(e, tabs_list),
+        data={'path': file.path, 'name': file.name, 'ext': file_ext},
     )
     book_grid.controls.append(book_item)
 
     book_grid.update()
 
-def on_dialogue_result(e: ft.FilePickerResultEvent, library_list: ft.ListView, book_grid: GridView):
+def on_dialogue_result(e: ft.FilePickerResultEvent, library_list: ft.ListView, book_grid: GridView, tabs_list: ft.Tabs):
     """Handle file picker result event"""
     if e.files:
         for f in e.files:
             print(f"Selected file: {f.name}")
             add_to_library(f, library_list)
-            add_to_grid(f, book_grid)
+            add_to_grid(f, book_grid, tabs_list)
     else:
         print("No file selected")
 
@@ -175,6 +197,7 @@ def search_books(e: ft.ControlEvent, book_grid: GridView):
 
     book_grid.update()
 
+
 # Main App
 def main(page: ft.Page):
     # Page setup
@@ -187,9 +210,19 @@ def main(page: ft.Page):
     left_panel = build_left_panel(library_list, table_list)
     book_grid = build_book_grid()
 
+    # Tabs List
+    tabs_list = ft.Tabs(
+        animation_duration=300,
+        tabs=[
+            ft.Tab(
+                text="Main page",
+            ),
+        ]
+    )
+
     # Search bar and file picker
     file_extensions = ["pdf", "txt", "epub"]
-    file_picker = ft.FilePicker(on_result=lambda e: on_dialogue_result(e, library_list, book_grid))
+    file_picker = ft.FilePicker(on_result=lambda e: on_dialogue_result(e, library_list, book_grid, tabs_list))
     choose_button = ft.FloatingActionButton(
         icon=ft.Icons.ADD,
         on_click=lambda _: file_picker.pick_files(
@@ -205,8 +238,7 @@ def main(page: ft.Page):
 
     page.overlay.append(file_picker)
 
-    # Layout
-    layout = ft.Row(
+    main_page = ft.Row(
         expand=True,
         vertical_alignment=ft.CrossAxisAlignment.START,
         controls=[
@@ -226,7 +258,9 @@ def main(page: ft.Page):
         ],
     )
 
-    page.add(layout)
+    tabs_list.tabs[0].content = main_page
+
+    page.add(tabs_list)
     page.update()
 
 ft.app(target=main)
