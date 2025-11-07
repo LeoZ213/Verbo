@@ -2,7 +2,7 @@
 
 import flet as ft
 
-from src.handlers.reader_handler import render_txt_content
+from src.handlers.reader_handler import render_txt_content, render_pdf_content
 
 def create_book_tab(book_data: dict) -> ft.Tab:
     """
@@ -20,17 +20,14 @@ def create_book_tab(book_data: dict) -> ft.Tab:
     if book_data['ext'] == "txt":
         book_content = render_txt_content(book_data['path'])
     elif book_data['ext'] == "pdf":
-        #TODO Convert pdf to a readable format
-        print("pdf not converted to readable format yet")
+        book_content = render_pdf_content(book_data['path'])
     elif book_data['ext'] == "epub":
         #TODO Convert EPUB to a readable format
         print("epub not converted to readable format yet")
 
     return ft.Tab(
         text=book_data['name'][0:5],
-        content=ft.Container(
-            content=book_content,
-        )
+        content=book_content
         # TODO: Wrap the text or have a hard border
     )
 

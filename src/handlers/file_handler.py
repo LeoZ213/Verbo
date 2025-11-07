@@ -5,9 +5,8 @@ from flet.core.file_picker import FilePickerFile
 from flet.core.grid_view import GridView
 
 from src.utils.cover_extractor import get_pdf_cover, get_epub_cover
-from src.ui.components import create_book_cover_widget, create_book_item
+from src.ui.main_page_ui import create_book_cover_widget, create_book_item
 from src.handlers.book_handler import book_item_double_tap
-
 
 def add_to_library(file: FilePickerFile, library_list: ft.ListView):
     """
@@ -70,7 +69,6 @@ def add_to_grid(file: FilePickerFile, book_grid: GridView, tabs_list: ft.Tabs):
 
     book_grid.controls.append(book_item)
     book_grid.update()
-
 
 def on_dialogue_result(e: ft.FilePickerResultEvent, library_list: ft.ListView,
                        book_grid: GridView, tabs_list: ft.Tabs):

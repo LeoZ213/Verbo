@@ -1,10 +1,49 @@
 import flet as ft
-from ebooklib import epub
-from bs4 import BeautifulSoup
-import html2text
+import fitz
+import tempfile
+import os
 
-def render_pdf_page():
-    return
+
+def render_pdf_content(file_path: str) -> ft.Container:
+    """
+    Create a simple PDF viewer showing the first page.
+
+    Args:
+        file_path: Path to the PDF file
+
+    Returns:
+        Container with the PDF image
+    """
+    # Open PDF
+    pdf_document = fitz.open(file_path)
+
+    # Create temp directory for page images
+    temp_dir = tempfile.mkdtemp()
+
+    # Get first page
+    pdf_page = pdf_document[0]
+
+    # Render page to image
+    pix = pdf_page.get_pixmap()
+
+    # Save to temp file
+    #TODO Change the temp file name depending on the page
+    img_path = os.path.join(temp_dir, f"page_0.png")
+    pix.save(img_path)
+
+    # Create image
+    page_image = ft.Image(
+        src=os.path.abspath(img_path),
+        fit=ft.ImageFit.CONTAIN,
+    )
+
+    # Return in a container
+    return ft.Container(
+        content=page_image,
+        expand=True,
+        alignment=ft.alignment.center,
+    )
+
 
 def render_epub_content(file_path: str):
     return

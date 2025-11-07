@@ -2,7 +2,7 @@
 
 import flet as ft
 
-from ui.components import build_left_panel, build_book_grid
+from ui.main_page_ui import build_left_panel, build_book_grid
 from handlers.file_handler import on_dialogue_result
 from handlers.book_handler import search_books
 
@@ -23,6 +23,8 @@ def main(page: ft.Page):
     tabs_list = ft.Tabs(
         animation_duration=300,
         tabs=[ft.Tab(text="Main page")],
+        # Used to make sure the tab isn't 0px so images render
+        expand=True
     )
 
     # File picker setup
