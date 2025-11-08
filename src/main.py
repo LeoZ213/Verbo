@@ -12,6 +12,21 @@ def main(page: ft.Page):
     # Page setup
     page.title = "Book Library"
     page.bgcolor = ft.Colors.WHITE
+    page.theme = ft.Theme(
+        text_theme=ft.TextTheme(
+            # This styles the main paragraph text
+            body_medium=ft.TextStyle(color=ft.Colors.BLACK, size=16),
+
+            # This styles '#' (H1) text, like your "Contents"
+            headline_small=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=24),
+
+            # This styles '##' (H2) text
+            title_large=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=22),
+
+            # This styles '###' (H3) text
+            title_medium=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=20),
+        )
+    )
 
     # Create UI components
     library_list = ft.ListView(height=page.height / 2)
