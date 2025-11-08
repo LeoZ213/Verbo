@@ -27,10 +27,13 @@ def create_book_tab(book_data: dict) -> ft.Tab:
 
     return ft.Tab(
         text=book_data['name'][0:5],
-        content=book_content
+        content=ft.Column(
+            controls=[
+                book_content,
+            ]
+        )
         # TODO: Wrap the text or have a hard border
     )
-
 
 def book_item_double_tap(e: ft.ControlEvent, tabs_list: ft.Tabs):
     """
@@ -71,3 +74,5 @@ def search_books(e: ft.ControlEvent, book_grid: ft.GridView):
             book_item.visible = query in book_name
 
     book_grid.update()
+
+

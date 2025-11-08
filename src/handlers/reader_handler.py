@@ -6,42 +6,93 @@ import os
 
 def render_pdf_content(file_path: str) -> ft.Container:
     """
-    Create a simple PDF viewer showing the first page.
+    Create a PDF viewer with navigation support.
 
     Args:
         file_path: Path to the PDF file
 
     Returns:
-        Container with the PDF image
+        Container with the PDF viewer
     """
     # Open PDF
     pdf_document = fitz.open(file_path)
+    total_pages = len(pdf_document)
 
-    # Create temp directory for page images
+    # Create temp directory
     temp_dir = tempfile.mkdtemp()
 
-    # Get first page
-    pdf_page = pdf_document[0]
+    # Current page state
+    current_page = [0]  # Using list to maintain reference
 
-    # Render page to image
-    pix = pdf_page.get_pixmap()
-
-    # Save to temp file
-    #TODO Change the temp file name depending on the page
-    img_path = os.path.join(temp_dir, f"page_0.png")
-    pix.save(img_path)
-
-    # Create image
+    # Create image widget
     page_image = ft.Image(
-        src=os.path.abspath(img_path),
         fit=ft.ImageFit.CONTAIN,
+        expand=True,
     )
 
-    # Return in a container
+    # Current page number text
+    page_info = ft.Text(
+        f"Page {current_page[0] + 1} of {total_pages}",
+        color=ft.Colors.BLACK
+    )
+
+    def render_page(page_num):
+        """Render a specific page."""
+        pdf_page = pdf_document[page_num]
+        pix = pdf_page.get_pixmap()
+
+        img_path = os.path.join(temp_dir, f"page_{page_num}.png")
+        pix.save(img_path)
+
+        page_image.src = os.path.abspath(img_path)
+        if page_image.page:
+            page_image.update()
+
+    def next_page(e):
+        """Navigate to next page."""
+        if current_page[0] < total_pages - 1:
+            current_page[0] += 1
+            render_page(current_page[0])
+
+            # Updates the page number text
+            page_info.value = f"Page {current_page[0] + 1} of {total_pages}"
+            page_info.update()
+
+    def prev_page(e):
+        """Navigate to previous page."""
+        if current_page[0] > 0:
+            current_page[0] -= 1
+            render_page(current_page[0])
+
+            # Updates the page number text
+            page_info.value = f"Page {current_page[0] + 1} of {total_pages}"
+            page_info.update()
+
+    # Create toolbar
+    toolbar = ft.Container(
+        content=ft.Row([
+            ft.ElevatedButton("Previous", on_click=prev_page),
+            ft.ElevatedButton("Next", on_click=next_page),
+            page_info
+        ]),
+        padding=10,
+        bgcolor=ft.Colors.INVERSE_SURFACE,
+    )
+
+    # Render first page
+    render_page(0)
+
+    # Return complete viewer with toolbar
     return ft.Container(
-        content=page_image,
+        content=ft.Column([
+            toolbar,
+            ft.Container(
+                content=page_image,
+                expand=True,
+                alignment=ft.alignment.center,
+            ),
+        ], spacing=0, expand=True),
         expand=True,
-        alignment=ft.alignment.center,
     )
 
 
