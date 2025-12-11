@@ -3,16 +3,15 @@
 import flet as ft
 
 
-def build_left_panel(library_list: ft.ListView, table_list: ft.ListView) -> ft.ExpansionPanelList:
+def build_left_panel(library_list: ft.ListView) -> ft.ExpansionPanelList:
     """
-    Builds the left sidebar with library and TOC panels.
+    Builds the left sidebar with library panel.
 
     Args:
         library_list: ListView containing library items
-        table_list: ListView containing table of contents items
 
     Returns:
-        ExpansionPanelList containing both panels
+        ExpansionPanelList containing library panel
     """
     return ft.ExpansionPanelList(
         expand_icon_color=ft.Colors.AMBER,
@@ -27,15 +26,7 @@ def build_left_panel(library_list: ft.ListView, table_list: ft.ListView) -> ft.E
                     text_color=ft.Colors.BLACK,
                 ),
                 content=library_list,
-            ),
-            ft.ExpansionPanel(
-                bgcolor=ft.Colors.WHITE,
-                header=ft.ListTile(
-                    title=ft.Text("Table of Contents"),
-                    bgcolor=ft.Colors.WHITE,
-                    text_color=ft.Colors.BLACK,
-                ),
-                content=table_list,
+                expanded=True,
             ),
         ],
     )
@@ -63,7 +54,7 @@ def create_book_cover_widget(file_ext: str, cover_path: str | None) -> ft.Contro
     Create appropriate cover widget based on file type.
 
     Args:
-        file_ext: File extension (pdf, epub, txt, etc.)
+        file_ext: File extension (pdf, txt, etc.)
         cover_path: Path to cover image, or None for placeholder
 
     Returns:
@@ -78,16 +69,15 @@ def create_book_cover_widget(file_ext: str, cover_path: str | None) -> ft.Contro
         )
 
     # Fallback icons based on file type
-    if file_ext == "epub":
-        return ft.Icon(ft.Icons.BOOK, size=150)
-    elif file_ext == "txt":
+    if file_ext == "txt":
         return ft.Icon(ft.Icons.DESCRIPTION, size=150)
     else:
         return ft.Icon(ft.Icons.BOOK, size=150)
 
 
 def create_book_item(file_path: str, file_name: str, file_ext: str,
-                     cover_widget: ft.Control, on_double_tap_handler) -> ft.GestureDetector:
+                     cover_widget: ft.Control, on_double_tap_handler,
+                     on_remove_handler) -> ft.Container:
     """
     Create a book item for the grid view.
 
@@ -97,9 +87,10 @@ def create_book_item(file_path: str, file_name: str, file_ext: str,
         file_ext: File extension
         cover_widget: Widget displaying the book cover
         on_double_tap_handler: Callback for double-tap events
+        on_remove_handler: Callback for remove button click
 
     Returns:
-        GestureDetector containing the complete book item
+        Container with GestureDetector and remove button
     """
     book_data = {'path': file_path, 'name': file_name, 'ext': file_ext}
 
@@ -111,7 +102,7 @@ def create_book_item(file_path: str, file_name: str, file_ext: str,
         alignment=ft.alignment.center,
     )
 
-    return ft.GestureDetector(
+    gesture_detector = ft.GestureDetector(
         content=ft.Column(
             controls=[
                 book_cover_container,
@@ -130,3 +121,36 @@ def create_book_item(file_path: str, file_name: str, file_ext: str,
         on_double_tap=on_double_tap_handler,
         data=book_data,
     )
+
+    # Remove button (initially hidden)
+    remove_button = ft.Container(
+        content=ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            icon_size=20,
+            icon_color=ft.Colors.RED,
+            bgcolor=ft.Colors.with_opacity(0.8, ft.Colors.WHITE),
+            on_click=on_remove_handler,
+        ),
+        right=0,
+        top=0,
+        data=book_data,
+        visible=False,
+    )
+
+    # Wrapper container with hover functionality
+    wrapper = ft.Container(
+        content=ft.Stack([
+            gesture_detector,
+            remove_button,
+        ]),
+        data=book_data,
+    )
+
+    # Hover handlers
+    def on_hover(e):
+        remove_button.visible = e.data == "true"
+        remove_button.update()
+
+    wrapper.on_hover = on_hover
+
+    return wrapper

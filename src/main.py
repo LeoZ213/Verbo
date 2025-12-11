@@ -29,21 +29,20 @@ def main(page: ft.Page):
     )
 
     # Create UI components
-    library_list = ft.ListView(height=page.height / 2)
-    table_list = ft.ListView(height=page.height / 2)
-    left_panel = build_left_panel(library_list, table_list)
+    library_list = ft.ListView(expand=True)
+    left_panel = build_left_panel(library_list)
     book_grid = build_book_grid()
 
     # Create tabs
     tabs_list = ft.Tabs(
         animation_duration=300,
         tabs=[ft.Tab(text="Main page")],
-        # Used to make sure the tab isn't 0px so images render
+        # Used to make sure the tab isn't 0 px so images render
         expand=True
     )
 
     # File picker setup
-    file_extensions = ["pdf", "txt", "epub"]
+    file_extensions = ["pdf", "txt"]
     file_picker = ft.FilePicker(
         on_result=lambda e: on_dialogue_result(e, library_list, book_grid, tabs_list)
     )
