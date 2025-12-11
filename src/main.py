@@ -11,20 +11,22 @@ def main(page: ft.Page):
     """Initialize and run the book library application."""
     # Page setup
     page.title = "Book Library"
-    page.bgcolor = ft.Colors.WHITE
+    page.bgcolor = ft.Colors.GREY_50  # Softer light background
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.theme = ft.Theme(
+        color_scheme_seed=ft.Colors.AMBER,
         text_theme=ft.TextTheme(
             # This styles the main paragraph text
-            body_medium=ft.TextStyle(color=ft.Colors.BLACK, size=16),
+            body_medium=ft.TextStyle(color=ft.Colors.GREY_900, size=16),
 
             # This styles '#' (H1) text, like your "Contents"
-            headline_small=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=24),
+            headline_small=ft.TextStyle(color=ft.Colors.GREY_900, weight=ft.FontWeight.BOLD, size=24),
 
             # This styles '##' (H2) text
-            title_large=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=22),
+            title_large=ft.TextStyle(color=ft.Colors.GREY_900, weight=ft.FontWeight.BOLD, size=22),
 
             # This styles '###' (H3) text
-            title_medium=ft.TextStyle(color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD, size=20),
+            title_medium=ft.TextStyle(color=ft.Colors.GREY_900, weight=ft.FontWeight.BOLD, size=20),
         )
     )
 
@@ -48,6 +50,45 @@ def main(page: ft.Page):
     )
     page.overlay.append(file_picker)
 
+    # Theme toggle button
+    def toggle_theme(e):
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            page.theme_mode = ft.ThemeMode.DARK
+            page.bgcolor = ft.Colors.GREY_900  # Softer dark background
+            theme_button.icon = ft.Icons.LIGHT_MODE
+            theme_button.tooltip = "Switch to Light Mode"
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+            page.bgcolor = ft.Colors.GREY_50  # Softer light background
+            theme_button.icon = ft.Icons.DARK_MODE
+            theme_button.tooltip = "Switch to Dark Mode"
+
+        # Force update of each book item in the grid to refresh text colors
+        for item in book_grid.controls:
+            # Recursively update all nested controls
+            def update_recursive(control):
+                if hasattr(control, 'update'):
+                    control.update()
+                if hasattr(control, 'content'):
+                    if isinstance(control.content, list):
+                        for c in control.content:
+                            update_recursive(c)
+                    elif control.content:
+                        update_recursive(control.content)
+                if hasattr(control, 'controls'):
+                    for c in control.controls:
+                        update_recursive(c)
+
+            update_recursive(item)
+
+        page.update()
+
+    theme_button = ft.IconButton(
+        icon=ft.Icons.DARK_MODE,
+        tooltip="Switch to Dark Mode",
+        on_click=toggle_theme,
+    )
+
     # Action buttons
     choose_button = ft.FloatingActionButton(
         icon=ft.Icons.ADD,
@@ -61,7 +102,8 @@ def main(page: ft.Page):
         view_elevation=4,
         divider_color=ft.Colors.AMBER,
         bar_hint_text="Search for books...",
-        on_change=lambda e: search_books(e, book_grid)
+        on_change=lambda e: search_books(e, book_grid),
+        expand=True,
     )
 
     # Build main layout
@@ -78,7 +120,7 @@ def main(page: ft.Page):
             ft.Column(
                 expand=3,
                 controls=[
-                    ft.Row(controls=[book_search, choose_button]),
+                    ft.Row(controls=[book_search, theme_button, choose_button]),
                     ft.Container(content=book_grid, expand=True),
                 ],
             ),

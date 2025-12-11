@@ -19,11 +19,9 @@ def build_left_panel(library_list: ft.ListView) -> ft.ExpansionPanelList:
         divider_color=ft.Colors.AMBER,
         controls=[
             ft.ExpansionPanel(
-                bgcolor=ft.Colors.WHITE,
+                # Remove hardcoded bgcolor to use theme colors
                 header=ft.ListTile(
                     title=ft.Text("Library"),
-                    bgcolor=ft.Colors.WHITE,
-                    text_color=ft.Colors.BLACK,
                 ),
                 content=library_list,
                 expanded=True,
@@ -114,7 +112,7 @@ def create_book_item(file_path: str, file_name: str, file_ext: str,
                     max_lines=2,
                     overflow=ft.TextOverflow.ELLIPSIS,
                     width=150,
-                    color=ft.Colors.BLACK
+                    color=ft.Colors.ON_SURFACE,
                 )
             ],
         ),
