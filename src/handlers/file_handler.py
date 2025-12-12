@@ -20,11 +20,10 @@ def add_to_library(file: FilePickerFile, library_list: ft.ListView):
         The created library item control
     """
     library_item = ft.TextButton(
-        content=ft.Text(file.name, max_lines=1),
+        content=ft.Text(file.name, max_lines=1, color=ft.Colors.ON_SURFACE),
         style=ft.ButtonStyle(
-            color=ft.Colors.RED,
             padding=ft.padding.symmetric(horizontal=20),
-            overlay_color=ft.Colors.with_opacity(0.1, ft.Colors.RED),
+            overlay_color=ft.Colors.with_opacity(0.1, ft.Colors.AMBER),
         ),
         data={'path': file.path, 'name': file.name}
     )
