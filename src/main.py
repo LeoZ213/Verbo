@@ -3,12 +3,17 @@
 import flet as ft
 
 from ui.main_page_ui import build_left_panel, build_book_grid
-from handlers.file_handler import on_dialogue_result
+from handlers.file_handler import on_dialogue_result, load_books_from_database
 from handlers.book_handler import search_books
+from handlers.database_handler import DatabaseHandler
 
 
 def main(page: ft.Page):
     """Initialize and run the book library application."""
+    print("\n" + "="*60)
+    print("[DEBUG] Starting Book Library Application")
+    print("="*60 + "\n")
+
     # Page setup
     page.title = "Book Library"
     page.bgcolor = ft.Colors.GREY_50  # Softer light background
@@ -30,6 +35,13 @@ def main(page: ft.Page):
         )
     )
 
+    # Initialize database
+    print("[DEBUG] Initializing database...")
+    db = DatabaseHandler()
+
+    # Print current database contents
+    db.print_all_books_raw()
+
     # Create UI components
     library_list = ft.ListView(expand=True)
     left_panel = build_left_panel(library_list)
@@ -46,7 +58,7 @@ def main(page: ft.Page):
     # File picker setup
     file_extensions = ["pdf", "txt"]
     file_picker = ft.FilePicker(
-        on_result=lambda e: on_dialogue_result(e, library_list, book_grid, tabs_list)
+        on_result=lambda e: on_dialogue_result(e, library_list, book_grid, tabs_list, db)
     )
     page.overlay.append(file_picker)
 
@@ -129,7 +141,16 @@ def main(page: ft.Page):
 
     tabs_list.tabs[0].content = main_page
     page.add(tabs_list)
+
+    # Load books from database after UI is set up
+    print("[DEBUG] Loading books from database...")
+    load_books_from_database(db, book_grid, tabs_list, library_list)
+    print(f"[DEBUG] Book grid now has {len(book_grid.controls)} items")
+
     page.update()
+
+    print("\n[DEBUG] Application startup complete")
+    print("="*60 + "\n")
 
 
 if __name__ == "__main__":
