@@ -143,6 +143,7 @@ class PDFReader(BookReader):
         captured_preview = ft.Image(
             fit=ft.ImageFit.CONTAIN,
             width=300,
+            height=150,
             visible=False,
         )
 
@@ -183,14 +184,19 @@ class PDFReader(BookReader):
         def toggle_panel(e):
             panel_visible[0] = not panel_visible[0]
             right_panel.visible = panel_visible[0]
+            resize_handle.visible = panel_visible[0]
             if panel_visible[0]:
                 toggle_panel_button.icon = ft.Icons.CLOSE_FULLSCREEN
                 toggle_panel_button.tooltip = "Close AI Panel"
+                reopen_panel_button.visible = False
             else:
                 toggle_panel_button.icon = ft.Icons.OPEN_IN_FULL
                 toggle_panel_button.tooltip = "Open AI Panel"
+                reopen_panel_button.visible = True
             toggle_panel_button.update()
+            reopen_panel_button.update()
             right_panel.update()
+            resize_handle.update()
 
         toggle_panel_button = ft.IconButton(
             icon=ft.Icons.CLOSE_FULLSCREEN,
@@ -226,11 +232,19 @@ class PDFReader(BookReader):
                 prompt_field,
                 quick_actions,
                 ft.Divider(height=1),
-                ft.Text("Captured Region:", size=12, weight=ft.FontWeight.BOLD),
-                captured_preview,
-                ft.Row([loading_indicator, status_text], spacing=10),
-                analysis_text,
-            ], spacing=10, scroll=ft.ScrollMode.AUTO, expand=True),
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text("Captured Region:", size=12, weight=ft.FontWeight.BOLD),
+                        captured_preview,
+                        ft.Row([loading_indicator, status_text], spacing=10),
+                    ], spacing=5, scroll=ft.ScrollMode.AUTO),
+                    height=180,
+                ),
+                ft.Container(
+                    content=analysis_text,
+                    expand=True,
+                ),
+            ], spacing=10, expand=True),
             width=self.panel_width,
             padding=15,
             bgcolor=ft.Colors.with_opacity(0.05, ft.Colors.BLACK),
@@ -404,12 +418,12 @@ class PDFReader(BookReader):
                             status_text.color = ft.Colors.GREEN
                         else:
                             analysis_text.value = result['error']
-                            status_text.value = "❌ Analysis failed"
+                            status_text.value = "✗ Analysis failed"
                             status_text.color = ft.Colors.RED
 
                     except Exception as ex:
                         analysis_text.value = f"Error: {str(ex)}"
-                        status_text.value = "❌ Error"
+                        status_text.value = "✗ Error"
                         status_text.color = ft.Colors.RED
 
                     finally:
@@ -441,6 +455,14 @@ class PDFReader(BookReader):
             tooltip="Capture Mode - Select region to analyze with Gemini"
         )
 
+        # Toggle button for when panel is closed
+        reopen_panel_button = ft.IconButton(
+            icon=ft.Icons.OPEN_IN_FULL,
+            tooltip="Open AI Panel",
+            on_click=toggle_panel,
+            visible=False,
+        )
+
         # Build UI
         toolbar = ft.Container(
             content=ft.Row([
@@ -454,6 +476,7 @@ class PDFReader(BookReader):
                 zoom_info,
                 ft.VerticalDivider(),
                 capture_button,
+                reopen_panel_button,
             ]),
             padding=10,
             bgcolor=ft.Colors.INVERSE_SURFACE,
@@ -484,7 +507,7 @@ class PDFReader(BookReader):
         )
 
         # Main layout with split view and resizable divider
-        return ft.Row([
+        main_layout = ft.Row([
             ft.Container(
                 content=ft.Column([
                     toolbar,
@@ -496,6 +519,9 @@ class PDFReader(BookReader):
             resize_handle,
             right_panel,
         ], expand=True)
+
+        # Initialize reopen button reference after toolbar is created
+        return main_layout
 
 
 class TXTReader(BookReader):
