@@ -3,7 +3,6 @@ import fitz
 import tempfile
 import os
 from abc import ABC, abstractmethod
-from pathlib import Path
 from PIL import Image
 import threading
 
@@ -138,6 +137,8 @@ class PDFReader(BookReader):
             min_lines=2,
             max_lines=3,
             text_size=12,
+            color=ft.Colors.ON_SURFACE,
+            label_style=ft.TextStyle(color=ft.Colors.ON_SURFACE_VARIANT),
         )
 
         captured_preview = ft.Image(
@@ -154,10 +155,12 @@ class PDFReader(BookReader):
             min_lines=15,
             expand=True,
             text_size=13,
+            color=ft.Colors.ON_SURFACE,
+            label_style=ft.TextStyle(color=ft.Colors.ON_SURFACE_VARIANT),
         )
 
         loading_indicator = ft.ProgressRing(visible=False, width=20, height=20)
-        status_text = ft.Text("", size=11, color=ft.Colors.GREY_700)
+        status_text = ft.Text("", size=11, color=ft.Colors.ON_SURFACE_VARIANT)
 
         # Quick action buttons using presets
         def set_extract_text(e):
@@ -225,7 +228,7 @@ class PDFReader(BookReader):
         right_panel = ft.Container(
             content=ft.Column([
                 ft.Row([
-                    ft.Text("AI Analysis", size=16, weight=ft.FontWeight.BOLD),
+                    ft.Text("AI Analysis", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.ON_SURFACE),
                     toggle_panel_button,
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=1),
@@ -234,7 +237,7 @@ class PDFReader(BookReader):
                 ft.Divider(height=1),
                 ft.Container(
                     content=ft.Column([
-                        ft.Text("Captured Region:", size=12, weight=ft.FontWeight.BOLD),
+                        ft.Text("Captured Region:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.ON_SURFACE),
                         captured_preview,
                         ft.Row([loading_indicator, status_text], spacing=10),
                     ], spacing=5, scroll=ft.ScrollMode.AUTO),
