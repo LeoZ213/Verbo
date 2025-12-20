@@ -5,6 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from PIL import Image
 import threading
+import time
 
 # Import AI functionality
 from src.utils.gemini_integration import GeminiAnalyzer, PromptPresets
@@ -409,11 +410,13 @@ class PDFReader(BookReader):
                         )
 
                         if cropped_img:
-                            # Save preview temporarily
-                            preview_path = os.path.join(self.temp_dir, "preview.png")
+                            # Save preview temporarily with unique filename to force refresh
+                            preview_path = os.path.join(self.temp_dir, f"preview_{int(time.time() * 1000)}.png")
                             cropped_img.save(preview_path)
                             captured_preview.src = preview_path
                             captured_preview.visible = True
+                            # Force image update
+                            captured_preview.update()
 
                         if result['success']:
                             analysis_text.value = result['text']
@@ -433,7 +436,6 @@ class PDFReader(BookReader):
                         loading_indicator.visible = False
                         if loading_indicator.page:
                             loading_indicator.update()
-                            captured_preview.update()
                             analysis_text.update()
                             status_text.update()
 
