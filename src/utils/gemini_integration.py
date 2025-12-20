@@ -89,13 +89,15 @@ class GeminiAnalyzer:
             # Encode image
             image_data = self.encode_image(image)
 
+            enhanced_prompt = f"{prompt}\n\nImportant: Provide your response in plain text only, without any markdown formatting, bold, italics, or special characters for emphasis."
+
             # Prepare request
             url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
 
             payload = {
                 "contents": [{
                     "parts": [
-                        {"text": prompt},
+                        {"text": enhanced_prompt},
                         {
                             "inline_data": {
                                 "mime_type": "image/png",
